@@ -74,19 +74,21 @@ app.post("/produto", (req, res) => {
 
       const sql = `
         INSERT INTO controle_validade
-        (codigo, produto, fornecedor, quantidade, data_validade)
-        VALUES (?, ?, ?, ?, ?)
+        (codigo, produto, fornecedor, quantidade, data_validade, loja, encarregado)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.query(
         sql,
-        [
-          d.codigo,
-          d.produto,
-          d.fornecedor,
-          d.quantidade,
-          d.data_validade
-        ],
+       [
+        d.codigo,
+        d.produto,
+        d.fornecedor,
+        d.quantidade,
+        d.data_validade,
+        d.loja,
+        d.encarregado
+      ]
         (err) => {
           if (err) return res.status(500).json(err);
           res.send(mensagem);
