@@ -20,13 +20,20 @@ app.get("/", (req, res) => {
 
 // 📦 LISTAR PRODUTOS (ordenado por validade)
 app.get("/produtos", (req, res) => {
-  db.query(
-    "SELECT * FROM controle_validade ORDER BY data_validade ASC",
-    (err, result) => {
-      if (err) return res.status(500).json(err);
-      res.json(result);
-    }
-  );
+  const loja = req.query.loja;
+
+  let sql = "SELECT * FROM controle_validade";
+
+  if (loja) {
+    sql += " WHERE loja = ?";
+  }
+
+  sql += " ORDER BY data_validade ASC";
+
+  db.query(sql, loja ? [loja] : [], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result);
+  });
 });
 
 
