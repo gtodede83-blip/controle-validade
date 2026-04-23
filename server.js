@@ -18,20 +18,24 @@ app.get("/", (req, res) => {
 });
 
 
-// 📦 LISTAR PRODUTOS (ordenado por validade)
+// 📦 LISTAR PRODUTOS (COM FILTRO POR LOJA)
 app.get("/produtos", (req, res) => {
   const loja = req.query.loja;
 
   let sql = "SELECT * FROM controle_validade";
 
-  if (loja) {
+  if (loja && loja !== "TODAS") {
     sql += " WHERE loja = ?";
   }
 
   sql += " ORDER BY data_validade ASC";
 
-  db.query(sql, loja ? [loja] : [], (err, result) => {
-    if (err) return res.status(500).json(err);
+  db.query(sql, loja && loja !== "TODAS" ? [loja] : [], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json("Erro ao buscar produtos");
+    }
+
     res.json(result);
   });
 });
@@ -45,22 +49,22 @@ app.get("/produto/:codigo", (req, res) => {
     "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
     [codigo],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao buscar produto");
+      }
 
-      if (result.length === 0) return res.json(null);
+      if (result.length === 0) {
+        return res.json(null);
+      }
 
       res.json(result[0]);
     }
   );
 });
 
-  function callback(err, result) {
-    if (err) return res.status(500).json(err);
-    res.json(result);
-  }
-});
 
-// ➕ CADASTRAR (SEM BLOQUEIO, SÓ ALERTA)
+// ➕ CADASTRAR PRODUTO
 app.post("/produto", (req, res) => {
   const d = req.body;
 
@@ -114,6 +118,8 @@ app.post("/produto", (req, res) => {
     }
   );
 });
+
+
 // ✅ MARCAR COMO RESOLVIDO
 app.put("/produto/:id/resolver", (req, res) => {
   const id = req.params.id;
@@ -122,13 +128,18 @@ app.put("/produto/:id/resolver", (req, res) => {
     "UPDATE controle_validade SET resolvido = 1 WHERE id = ?",
     [id],
     (err) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao atualizar");
+      }
+
       res.send("Produto marcado como sem estoque");
     }
   );
 });
 
-// ❌ EXCLUIR
+
+// ❌ EXCLUIR PRODUTO
 app.delete("/produto/:id", (req, res) => {
   const id = req.params.id;
 
@@ -136,14 +147,18 @@ app.delete("/produto/:id", (req, res) => {
     "DELETE FROM controle_validade WHERE id = ?",
     [id],
     (err) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao excluir");
+      }
+
       res.send("Excluído com sucesso");
     }
   );
 });
 
 
-// 🚀 INICIAR
+// 🚀 INICIAR SERVIDOR
 app.listen(3000, () => {
   console.log("Servidor rodando na porta 3000");
 });
