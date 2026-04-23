@@ -95,7 +95,19 @@ app.post("/produto", (req, res) => {
     }
   );
 });
+// ✅ MARCAR COMO RESOLVIDO
+app.put("/produto/:id/resolver", (req, res) => {
+  const id = req.params.id;
 
+  db.query(
+    "UPDATE controle_validade SET resolvido = 1 WHERE id = ?",
+    [id],
+    (err) => {
+      if (err) return res.status(500).json(err);
+      res.send("Produto marcado como sem estoque");
+    }
+  );
+});
 
 // ❌ EXCLUIR
 app.delete("/produto/:id", (req, res) => {
