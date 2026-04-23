@@ -14,9 +14,9 @@ const db = mysql.createPool({
   database: "railway",
   port: 40118,
   ssl: {
+    minVersion: "TLSv1.2",
     rejectUnauthorized: false
-  },
-  connectTimeout: 10000
+  }
 });
 // 🔍 TESTE SIMPLES
 app.get("/", (req, res) => {
