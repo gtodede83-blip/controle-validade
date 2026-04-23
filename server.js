@@ -51,4 +51,14 @@ db.query(sql, [
   });
 });
 
+app.delete("/produto/:id", (req, res) => {
+  const id = req.params.id;
+
+  db.query("DELETE FROM controle_validade WHERE id = ?", [id], (err) => {
+    if (err) return res.status(500).json(err);
+    res.send("Excluído");
+  });
+});
+
 app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
+
