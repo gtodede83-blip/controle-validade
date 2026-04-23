@@ -47,7 +47,19 @@ app.post("/produto", (req, res) => {
           );
         }
       }
+      
+if (result.length > 0) {
+  const produtoSalvo = result[0].produto;
 
+  if (produtoSalvo !== d.produto) {
+    return res.status(400).send(
+      `⚠️ Código já pertence ao produto "${produtoSalvo}"`
+    );
+  }
+
+  // 👉 só informa, mas continua salvando
+  console.log("Produto já existente, novo lançamento permitido");
+}
       // ✅ não bloqueia por validade → permite salvar
       const sql = `
         INSERT INTO controle_validade
