@@ -29,22 +29,26 @@ app.get("/produtos", (req, res) => {
 app.post("/produto", (req, res) => {
   const d = req.body;
 
+  // 🔎 Verifica se já existe esse código
   db.query(
     "SELECT produto FROM controle_validade WHERE codigo = ? LIMIT 1",
     [d.codigo],
     (err, result) => {
       if (err) return res.status(500).json(err);
 
+      // 👉 se já existe código
       if (result.length > 0) {
         const produtoSalvo = result[0].produto;
 
+        // ❌ se nome for diferente → bloqueia
         if (produtoSalvo !== d.produto) {
           return res.status(400).send(
-            `Esse código já pertence ao produto "${produtoSalvo}"`
+            `Código já cadastrado como "${produtoSalvo}"`
           );
         }
       }
 
+      // ✅ não bloqueia por validade → permite salvar
       const sql = `
         INSERT INTO controle_validade
         (codigo, produto, fornecedor, quantidade, data_validade)
