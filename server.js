@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 // 📦 LISTAR PRODUTOS
 app.get("/produtos", (req, res) => {
-  db.query("SELECT * FROM controle_validade", (err, result) => {
+  db.query("SELECT * FROM controle_validade ORDER BY data_validade ASC", (err, result) => {
     if (err) return res.status(500).json(err);
     res.json(result);
   });
