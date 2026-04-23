@@ -31,24 +31,23 @@ app.get("/produtos", (req, res) => {
 
 
 // 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
-app.get("/produto/:codigo", (req, res) => {
-  const codigo = req.params.codigo;
+app.get("/produtos", (req, res) => {
+  const loja = req.query.loja;
 
-  db.query(
-    "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
-    [codigo],
-    (err, result) => {
-      if (err) return res.status(500).json(err);
+  let sql = "SELECT * FROM controle_validade";
 
-      if (result.length === 0) {
-        return res.json(null);
-      }
+  if (loja) {
+    sql += " WHERE loja = ?";
+    db.query(sql, [loja], callback);
+  } else {
+    db.query(sql, callback);
+  }
 
-      res.json(result[0]);
-    }
-  );
+  function callback(err, result) {
+    if (err) return res.status(500).json(err);
+    res.json(result);
+  }
 });
-
 
 // ➕ CADASTRAR (SEM BLOQUEIO, SÓ ALERTA)
 app.post("/produto", (req, res) => {
