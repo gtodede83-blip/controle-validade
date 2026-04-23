@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
   res.send("API funcionando");
 });
 
+
 // 📦 LISTAR PRODUTOS (ordenado por validade)
 app.get("/produtos", (req, res) => {
   db.query(
@@ -27,6 +28,27 @@ app.get("/produtos", (req, res) => {
     }
   );
 });
+
+
+// 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
+app.get("/produto/:codigo", (req, res) => {
+  const codigo = req.params.codigo;
+
+  db.query(
+    "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
+    [codigo],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+
+      if (result.length === 0) {
+        return res.json(null);
+      }
+
+      res.json(result[0]);
+    }
+  );
+});
+
 
 // ➕ CADASTRAR (SEM BLOQUEIO, SÓ ALERTA)
 app.post("/produto", (req, res) => {
@@ -40,7 +62,6 @@ app.post("/produto", (req, res) => {
 
       let mensagem = "Salvo com sucesso";
 
-      // 👉 Se já existe código
       if (result.length > 0) {
         const produtoSalvo = result[0].produto;
 
@@ -51,7 +72,6 @@ app.post("/produto", (req, res) => {
         }
       }
 
-      // ✅ SEM BLOQUEIO → sempre salva
       const sql = `
         INSERT INTO controle_validade
         (codigo, produto, fornecedor, quantidade, data_validade)
@@ -76,6 +96,7 @@ app.post("/produto", (req, res) => {
   );
 });
 
+
 // ❌ EXCLUIR
 app.delete("/produto/:id", (req, res) => {
   const id = req.params.id;
@@ -89,6 +110,7 @@ app.delete("/produto/:id", (req, res) => {
     }
   );
 });
+
 
 // 🚀 INICIAR
 app.listen(3000, () => {
