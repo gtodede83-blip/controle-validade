@@ -17,8 +17,7 @@ app.get("/", (req, res) => {
   res.send("API funcionando");
 });
 
-
-// 📦 LISTAR PRODUTOS (ordenado por validade)
+// 📦 LISTAR PRODUTOS
 app.get("/produtos", (req, res) => {
   db.query(
     "SELECT * FROM controle_validade ORDER BY data_validade ASC",
@@ -29,8 +28,7 @@ app.get("/produtos", (req, res) => {
   );
 });
 
-
-// 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
+// 🔎 BUSCAR PRODUTO PELO CÓDIGO
 app.get("/produto/:codigo", (req, res) => {
   const codigo = req.params.codigo;
 
@@ -40,17 +38,14 @@ app.get("/produto/:codigo", (req, res) => {
     (err, result) => {
       if (err) return res.status(500).json(err);
 
-      if (result.length === 0) {
-        return res.json(null);
-      }
+      if (result.length === 0) return res.json(null);
 
       res.json(result[0]);
     }
   );
 });
 
-
-// ➕ CADASTRAR (SEM BLOQUEIO, SÓ ALERTA)
+// ➕ CADASTRAR
 app.post("/produto", (req, res) => {
   const d = req.body;
 
@@ -80,15 +75,15 @@ app.post("/produto", (req, res) => {
 
       db.query(
         sql,
-       [
-        d.codigo,
-        d.produto,
-        d.fornecedor,
-        d.quantidade,
-        d.data_validade,
-        d.loja,
-        d.encarregado
-      ]
+        [
+          d.codigo,
+          d.produto,
+          d.fornecedor,
+          d.quantidade,
+          d.data_validade,
+          d.loja,
+          d.encarregado
+        ],
         (err) => {
           if (err) return res.status(500).json(err);
           res.send(mensagem);
@@ -97,6 +92,7 @@ app.post("/produto", (req, res) => {
     }
   );
 });
+
 // ✅ MARCAR COMO RESOLVIDO
 app.put("/produto/:id/resolver", (req, res) => {
   const id = req.params.id;
@@ -124,7 +120,6 @@ app.delete("/produto/:id", (req, res) => {
     }
   );
 });
-
 
 // 🚀 INICIAR
 app.listen(3000, () => {
