@@ -7,8 +7,17 @@ app.use(cors());
 app.use(express.json());
 
 // ✅ CONEXÃO CERTA (Railway)
-const db = mysql.createPool(process.env.MYSQL_URL);
-
+const db = mysql.createPool({
+  host: "shortline.proxy.rlwy.net",
+  user: "root",
+  password: "oDKphJSdgzJdOFohmjUBOnvRlHFMjUew",
+  database: "railway",
+  port: 40118,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  connectTimeout: 10000
+});
 // 🔍 TESTE SIMPLES
 app.get("/", (req, res) => {
   res.send("API funcionando");
