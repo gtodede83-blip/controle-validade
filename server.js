@@ -7,10 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 // ✅ CONEXÃO CERTA (Railway)
-const db = mysql.createPool({
-  uri: process.env.MYSQL_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const db = mysql.createPool(process.env.MYSQL_URL);
 
 // 🔍 TESTE SIMPLES
 app.get("/", (req, res) => {
