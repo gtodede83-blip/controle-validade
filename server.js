@@ -8,13 +8,8 @@ app.use(express.json());
 
 // ✅ CONEXÃO CERTA (Railway)
 const db = mysql.createPool({
-  host: "shortline.proxy.rlwy.net",
-  user: "root",
-  password: "oDKphJSdgzJdOFohmjUBOnvRlHFMjUew",
-  database: "railway",
-  port: 40118,
+  uri: process.env.MYSQL_URL,
   ssl: {
-    minVersion: "TLSv1.2",
     rejectUnauthorized: false
   }
 });
