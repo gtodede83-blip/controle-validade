@@ -22,7 +22,10 @@ app.get("/produtos", (req, res) => {
   db.query(
     "SELECT * FROM controle_validade ORDER BY data_validade ASC",
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao buscar produtos");
+      }
       res.json(result);
     }
   );
@@ -36,7 +39,10 @@ app.get("/produto/:codigo", (req, res) => {
     "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
     [codigo],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao buscar produto");
+      }
 
       if (result.length === 0) return res.json(null);
 
@@ -49,11 +55,19 @@ app.get("/produto/:codigo", (req, res) => {
 app.post("/produto", (req, res) => {
   const d = req.body;
 
+  // 🔒 VALIDAÇÃO
+  if (!d.codigo || !d.produto || !d.quantidade || !d.data_validade) {
+    return res.status(400).send("Preencha todos os campos obrigatórios");
+  }
+
   db.query(
     "SELECT produto FROM controle_validade WHERE codigo = ? LIMIT 1",
     [d.codigo],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro na validação");
+      }
 
       let mensagem = "Salvo com sucesso";
 
@@ -78,14 +92,18 @@ app.post("/produto", (req, res) => {
         [
           d.codigo,
           d.produto,
-          d.fornecedor,
+          d.fornecedor || null,
           d.quantidade,
           d.data_validade,
-          d.loja,
-          d.encarregado
+          d.loja || null,
+          d.encarregado || null
         ],
         (err) => {
-          if (err) return res.status(500).json(err);
+          if (err) {
+            console.error(err);
+            return res.status(500).json("Erro ao salvar");
+          }
+
           res.send(mensagem);
         }
       );
@@ -101,7 +119,11 @@ app.put("/produto/:id/resolver", (req, res) => {
     "UPDATE controle_validade SET resolvido = 1 WHERE id = ?",
     [id],
     (err) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao atualizar");
+      }
+
       res.send("Produto marcado como sem estoque");
     }
   );
@@ -115,7 +137,11 @@ app.delete("/produto/:id", (req, res) => {
     "DELETE FROM controle_validade WHERE id = ?",
     [id],
     (err) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error(err);
+        return res.status(500).json("Erro ao excluir");
+      }
+
       res.send("Excluído com sucesso");
     }
   );
