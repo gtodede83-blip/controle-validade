@@ -17,21 +17,20 @@ app.get("/", (req, res) => {
   res.send("API funcionando");
 });
 
-// 📦 LISTAR PRODUTOS
+
+// 📦 LISTAR PRODUTOS (ordenado por validade)
 app.get("/produtos", (req, res) => {
   db.query(
     "SELECT * FROM controle_validade ORDER BY data_validade ASC",
     (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao buscar produtos");
-      }
+      if (err) return res.status(500).json(err);
       res.json(result);
     }
   );
 });
 
-// 🔎 BUSCAR PRODUTO PELO CÓDIGO
+
+// 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
 app.get("/produto/:codigo", (req, res) => {
   const codigo = req.params.codigo;
 
@@ -39,35 +38,27 @@ app.get("/produto/:codigo", (req, res) => {
     "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
     [codigo],
     (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao buscar produto");
-      }
+      if (err) return res.status(500).json(err);
 
-      if (result.length === 0) return res.json(null);
+      if (result.length === 0) {
+        return res.json(null);
+      }
 
       res.json(result[0]);
     }
   );
 });
 
-// ➕ CADASTRAR
+
+// ➕ CADASTRAR (SEM BLOQUEIO, SÓ ALERTA)
 app.post("/produto", (req, res) => {
   const d = req.body;
-
-  // 🔒 VALIDAÇÃO
-  if (!d.codigo || !d.produto || !d.quantidade || !d.data_validade) {
-    return res.status(400).send("Preencha todos os campos obrigatórios");
-  }
 
   db.query(
     "SELECT produto FROM controle_validade WHERE codigo = ? LIMIT 1",
     [d.codigo],
     (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro na validação");
-      }
+      if (err) return res.status(500).json(err);
 
       let mensagem = "Salvo com sucesso";
 
@@ -89,28 +80,23 @@ app.post("/produto", (req, res) => {
 
       db.query(
         sql,
-        [
-          d.codigo,
-          d.produto,
-          d.fornecedor || null,
-          d.quantidade,
-          d.data_validade,
-          d.loja || null,
-          d.encarregado || null
-        ],
+       [
+        d.codigo,
+        d.produto,
+        d.fornecedor,
+        d.quantidade,
+        d.data_validade,
+        d.loja,
+        d.encarregado
+      ],
         (err) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json("Erro ao salvar");
-          }
-
+          if (err) return res.status(500).json(err);
           res.send(mensagem);
         }
       );
     }
   );
 });
-
 // ✅ MARCAR COMO RESOLVIDO
 app.put("/produto/:id/resolver", (req, res) => {
   const id = req.params.id;
@@ -119,11 +105,7 @@ app.put("/produto/:id/resolver", (req, res) => {
     "UPDATE controle_validade SET resolvido = 1 WHERE id = ?",
     [id],
     (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao atualizar");
-      }
-
+      if (err) return res.status(500).json(err);
       res.send("Produto marcado como sem estoque");
     }
   );
@@ -137,15 +119,12 @@ app.delete("/produto/:id", (req, res) => {
     "DELETE FROM controle_validade WHERE id = ?",
     [id],
     (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao excluir");
-      }
-
+      if (err) return res.status(500).json(err);
       res.send("Excluído com sucesso");
     }
   );
 });
+
 
 // 🚀 INICIAR
 app.listen(3000, () => {
