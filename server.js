@@ -73,30 +73,31 @@ app.post("/produto", (req, res) => {
       }
 
       const sql = `
-        INSERT INTO controle_validade
-        (codigo, produto, fornecedor, quantidade, data_validade, loja, encarregado)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
+  INSERT INTO controle_validade
+  (codigo, produto, fornecedor, quantidade, data_validade, loja, encarregado)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
 
-      db.query(
-        sql,
-       [
-        d.codigo,
-        d.produto,
-        d.fornecedor,
-        d.quantidade,
-        d.data_validade,
-        d.loja,
-        d.encarregado
-      ],
-        (err) => {
-          if (err) return res.status(500).json(err);
-          res.send(mensagem);
-        }
-      );
+db.query(
+  sql,
+  [
+    d.codigo,
+    d.produto,
+    d.fornecedor || null,
+    d.quantidade,
+    d.data_validade,
+    d.loja || null,
+    d.encarregado || null
+  ],
+  (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json("Erro ao salvar no banco");
     }
-  );
-});
+
+    res.send(mensagem);
+  }
+);
 // ✅ MARCAR COMO RESOLVIDO
 app.put("/produto/:id/resolver", (req, res) => {
   const id = req.params.id;
