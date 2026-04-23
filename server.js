@@ -38,17 +38,21 @@ app.get("/produtos", (req, res) => {
 
 
 // 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
-app.get("/produtos", (req, res) => {
-  const loja = req.query.loja;
+app.get("/produto/:codigo", (req, res) => {
+  const codigo = req.params.codigo;
 
-  let sql = "SELECT * FROM controle_validade";
+  db.query(
+    "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
+    [codigo],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
 
-  if (loja) {
-    sql += " WHERE loja = ?";
-    db.query(sql, [loja], callback);
-  } else {
-    db.query(sql, callback);
-  }
+      if (result.length === 0) return res.json(null);
+
+      res.json(result[0]);
+    }
+  );
+});
 
   function callback(err, result) {
     if (err) return res.status(500).json(err);
