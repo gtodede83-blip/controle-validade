@@ -13,8 +13,12 @@ const db = mysql.createPool({
 });
 
 // 🔍 TESTE
+const path = require("path");
+
+app.use(express.static(path.join(__dirname, "controle-visita")));
+
 app.get("/", (req, res) => {
-  res.send("API funcionando");
+  res.sendFile(path.join(__dirname, "controle-visita", "index.html"));
 });
 
 
