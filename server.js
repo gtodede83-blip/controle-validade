@@ -15,8 +15,10 @@ const db = mysql.createPool({
 // 🔍 TESTE
 const path = require("path");
 
+// servir arquivos estáticos
 app.use(express.static(__dirname));
 
+// rota principal → abrir HTML
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
