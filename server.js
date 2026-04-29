@@ -13,12 +13,10 @@ const db = mysql.createPool({
 });
 
 // 🔍 TESTE
-const path = require("path");
-
-app.use(express.static(path.join(__dirname, "controle-visita")));
+app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "controle-visita", "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 
