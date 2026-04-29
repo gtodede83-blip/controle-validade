@@ -1,26 +1,29 @@
 const express = require("express");
 const cors = require("cors");
-const { Pool } = require("pg");
 const path = require("path");
+const { Pool } = require("pg");
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// 🔥 CONEXÃO POSTGRES (Render)
+// 🔥 CONEXÃO POSTGRES (RENDER)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
 // ✅ SERVIR HTML
-const path = require("path");
-
 app.use(express.static(__dirname));
 
+// ✅ ROTA PRINCIPAL
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ✅ TESTE API
+app.get("/api", (req, res) => {
+  res.send("API Controle de Visitas OK");
 });
 
 // ✅ CRIAR TABELAS
@@ -52,40 +55,7 @@ app.get("/criar-tabelas", async (req, res) => {
   }
 });
 
-// ✅ CADASTRAR VISITA
-app.post("/visitas", async (req, res) => {
-  const { data, loja_id, encarregado_id, observacao } = req.body;
-
-  try {
-    await pool.query(
-      "INSERT INTO visitas (data, loja_id, encarregado_id, observacao) VALUES ($1, $2, $3, $4)",
-      [data, loja_id, encarregado_id, observacao]
-    );
-
-    res.send("Visita salva!");
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-// ✅ LISTAR VISITAS
-app.get("/visitas", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT v.*, l.nome AS loja, e.nome AS encarregado
-      FROM visitas v
-      LEFT JOIN lojas l ON v.loja_id = l.id
-      LEFT JOIN encarregados e ON v.encarregado_id = e.id
-      ORDER BY v.id DESC
-    `);
-
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-// 🚀 PORTA CORRETA PARA RENDER
+// 🚀 PORTA DO RENDER
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
