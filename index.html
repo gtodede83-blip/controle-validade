@@ -20,7 +20,7 @@
 const API = "";
 
 async function salvar() {
-  await fetch("/visitas", {
+  await fetch(API + "/visitas", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
@@ -35,11 +35,11 @@ async function salvar() {
 }
 
 async function carregar() {
-  let res = await fetch("/visitas");
+  let res = await fetch(API + "/visitas");
   let dados = await res.json();
 
   document.getElementById("lista").innerHTML =
-    dados.map(v => `<li>${v.data} - ${v.loja}</li>`).join("");
+    dados.map(v => `<li>${v.data} - ${v.loja || ""}</li>`).join("");
 }
 
 carregar();
