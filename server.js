@@ -1,170 +1,96 @@
 const express = require("express");
-const mysql = require("mysql2");
 const cors = require("cors");
+const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// ✅ CONEXÃO
-const db = mysql.createPool({
-  uri: process.env.MYSQL_URL,
+// 🔥 CONEXÃO POSTGRES (Render)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// 🔍 TESTE
-const path = require("path");
-
-// servir arquivos estáticos
+// ✅ SERVIR HTML
 app.use(express.static(__dirname));
 
-// rota principal → abrir HTML
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-
-// 📦 LISTAR PRODUTOS (COM FILTRO POR LOJA)
-app.get("/produtos", (req, res) => {
-  const loja = req.query.loja;
-
-  let sql = "SELECT * FROM controle_validade";
-
-  if (loja && loja !== "TODAS") {
-    sql += " WHERE loja = ?";
-  }
-
-  sql += " ORDER BY data_validade ASC";
-
-  db.query(sql, loja && loja !== "TODAS" ? [loja] : [], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json("Erro ao buscar produtos");
-    }
-
-    res.json(result);
-  });
+// ✅ TESTE
+app.get("/status", (req, res) => {
+  res.send("API Controle de Visitas OK");
 });
 
-
-// 🔎 BUSCAR PRODUTO PELO CÓDIGO (AUTO PREENCHER)
-app.get("/produto/:codigo", (req, res) => {
-  const codigo = req.params.codigo;
-
-  db.query(
-    "SELECT produto, fornecedor FROM controle_validade WHERE codigo = ? LIMIT 1",
-    [codigo],
-    (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao buscar produto");
-      }
-
-      if (result.length === 0) {
-        return res.json(null);
-      }
-
-      res.json(result[0]);
-    }
-  );
-});
-
-
-// ➕ CADASTRAR PRODUTO
-app.post("/produto", (req, res) => {
-  const d = req.body;
-
-  db.query(
-    "SELECT produto FROM controle_validade WHERE codigo = ? LIMIT 1",
-    [d.codigo],
-    (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao validar código");
-      }
-
-      let mensagem = "Salvo com sucesso";
-
-      if (result.length > 0) {
-        const produtoSalvo = result[0].produto;
-
-        if (produtoSalvo !== d.produto) {
-          mensagem = `⚠️ Código já cadastrado como "${produtoSalvo}"`;
-        } else {
-          mensagem = "⚠️ Produto já existe (novo lote adicionado)";
-        }
-      }
-
-      const sql = `
-        INSERT INTO controle_validade
-        (codigo, produto, fornecedor, quantidade, data_validade, loja, encarregado)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      db.query(
-        sql,
-        [
-          d.codigo,
-          d.produto,
-          d.fornecedor || null,
-          d.quantidade,
-          d.data_validade,
-          d.loja || null,
-          d.encarregado || null
-        ],
-        (err) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json("Erro ao salvar no banco");
-          }
-
-          res.send(mensagem);
-        }
+// ✅ CRIAR TABELAS
+app.get("/criar-tabelas", async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS lojas (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100)
       );
-    }
-  );
+
+      CREATE TABLE IF NOT EXISTS encarregados (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100)
+      );
+
+      CREATE TABLE IF NOT EXISTS visitas (
+        id SERIAL PRIMARY KEY,
+        data DATE,
+        loja_id INT REFERENCES lojas(id),
+        encarregado_id INT REFERENCES encarregados(id),
+        observacao TEXT
+      );
+    `);
+
+    res.send("Tabelas criadas com sucesso!");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
+// ✅ CADASTRAR VISITA
+app.post("/visitas", async (req, res) => {
+  const { data, loja_id, encarregado_id, observacao } = req.body;
 
-// ✅ MARCAR COMO RESOLVIDO
-app.put("/produto/:id/resolver", (req, res) => {
-  const id = req.params.id;
+  try {
+    await pool.query(
+      "INSERT INTO visitas (data, loja_id, encarregado_id, observacao) VALUES ($1, $2, $3, $4)",
+      [data, loja_id, encarregado_id, observacao]
+    );
 
-  db.query(
-    "UPDATE controle_validade SET resolvido = 1 WHERE id = ?",
-    [id],
-    (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao atualizar");
-      }
-
-      res.send("Produto marcado como sem estoque");
-    }
-  );
+    res.send("Visita salva!");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
+// ✅ LISTAR VISITAS
+app.get("/visitas", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT v.*, l.nome AS loja, e.nome AS encarregado
+      FROM visitas v
+      LEFT JOIN lojas l ON v.loja_id = l.id
+      LEFT JOIN encarregados e ON v.encarregado_id = e.id
+      ORDER BY v.id DESC
+    `);
 
-// ❌ EXCLUIR PRODUTO
-app.delete("/produto/:id", (req, res) => {
-  const id = req.params.id;
-
-  db.query(
-    "DELETE FROM controle_validade WHERE id = ?",
-    [id],
-    (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json("Erro ao excluir");
-      }
-
-      res.send("Excluído com sucesso");
-    }
-  );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
+// 🚀 PORTA CORRETA PARA RENDER
+const PORT = process.env.PORT || 3000;
 
-// 🚀 INICIAR SERVIDOR
-app.listen(3000, () => {
-  console.log("Servidor rodando na porta 3000");
+app.listen(PORT, () => {
+  console.log("Servidor rodando na porta", PORT);
 });
