@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Controle de Visitas</title>
+</head>
+<body>
+
+<h1>Controle de Visitas</h1>
+
+<input type="date" id="data">
+<input type="number" id="loja" placeholder="ID Loja">
+<input type="number" id="enc" placeholder="ID Encarregado">
+<input type="text" id="obs" placeholder="Observação">
+
+<button onclick="salvar()">Salvar</button>
+
+<ul id="lista"></ul>
+
+<script>
+const API = "";
+
+async function salvar() {
+  await fetch("/visitas", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      data: document.getElementById("data").value,
+      loja_id: document.getElementById("loja").value,
+      encarregado_id: document.getElementById("enc").value,
+      observacao: document.getElementById("obs").value
+    })
+  });
+
+  carregar();
+}
+
+async function carregar() {
+  let res = await fetch("/visitas");
+  let dados = await res.json();
+
+  document.getElementById("lista").innerHTML =
+    dados.map(v => `<li>${v.data} - ${v.loja}</li>`).join("");
+}
+
+carregar();
+</script>
+
+</body>
+</html>
