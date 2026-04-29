@@ -13,6 +13,8 @@ const db = mysql.createPool({
 });
 
 // 🔍 TESTE
+const path = require("path");
+
 app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
