@@ -4,6 +4,8 @@ const path = require("path");
 const { Pool } = require("pg");
 
 const app = express();
+
+// 🔧 MIDDLEWARES
 app.use(cors());
 app.use(express.json());
 
@@ -13,17 +15,17 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// ✅ SERVIR HTML
-app.use(express.static(__dirname));
+// 🔥 SERVIR ARQUIVOS ESTÁTICOS
+app.use(express.static(path.join(__dirname)));
 
-// ✅ ROTA PRINCIPAL
+// ✅ ROTA PRINCIPAL (ABRE HTML)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ✅ TESTE API
+// ✅ HEALTH CHECK (IMPORTANTE PRA RENDER)
 app.get("/api", (req, res) => {
-  res.send("API Controle de Visitas OK");
+  res.json({ status: "OK" });
 });
 
 // ✅ CRIAR TABELAS
@@ -51,14 +53,14 @@ app.get("/criar-tabelas", async (req, res) => {
 
     res.send("Tabelas criadas com sucesso!");
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(err);
+    res.status(500).send("Erro ao criar tabelas");
   }
 });
 
-// 🚀 PORTA DO RENDER
-const PORT = process.env.PORT || 3000;
+// 🚀 PORTA (RENDER OBRIGA USAR ISSO)
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
   console.log("Servidor rodando na porta", PORT);
 });
-// atualização final agora
